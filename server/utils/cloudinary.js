@@ -11,36 +11,52 @@ cloudinary.config({
 });
 
 const uploadOnCloudinary = async (localFilePath, folder = 'finTrack') => {
-  if (!localFilePath) {
-    console.error('No file path provided');
-    return null;
-  }
-
-  let response = null;
-  
   try {
-    response = await cloudinary.uploader.upload(localFilePath, {
+    if (!localFilePath) {
+      return null;
+    }
+    
+    // Check if file exists before uploading
+    if (!fs.existsSync(localFilePath)) {
+      console.error("File not found at path:", localFilePath);
+      return null;
+    }
+    
+    // Upload the file
+    console.log("Attempting to upload to Cloudinary:", localFilePath);
+    const response = await cloudinary.uploader.upload(localFilePath, {
       folder: folder, 
       use_filename: true, 
       unique_filename: false, 
+      resource_type: "auto",
     });
     
-    console.log('\nUpload successful:', response.url); 
-  } catch (error) {
-    console.error('Error uploading file to Cloudinary:', error.message);
-    console.error('Error stack:', error.stack);
-  } finally {
+    console.log("Upload successful:", response.url);
+    
+    // Remove the locally saved file
     try {
-      if (fs.existsSync(localFilePath)) {
-        fs.unlinkSync(localFilePath);
-        console.log('\nLocal file deleted successfully');
-      }
+      fs.unlinkSync(localFilePath);
+      console.log("Local file deleted after upload");
     } catch (unlinkError) {
-      console.error('Error deleting local file:', unlinkError.message);
+      console.error("Error deleting local file:", unlinkError);
     }
+    
+    return response;
+  } catch (error) {
+    console.error("Cloudinary upload error:", error);
+    
+    // Clean up local file in case of error
+    if (localFilePath && fs.existsSync(localFilePath)) {
+      try {
+        fs.unlinkSync(localFilePath);
+        console.log("Local file deleted after upload error");
+      } catch (unlinkError) {
+        console.error("Error deleting local file after upload error:", unlinkError);
+      }
+    }
+    
+    return null;
   }
-
-  return response;
 };
 
 export default uploadOnCloudinary;

@@ -6,14 +6,13 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-import  Button  from "../components/Button";
-import  Input  from "../components/Input";
+import Button from "../components/Button";
+import Input from "../components/Input";
 import { Label } from "../components/ui/label";
 import { Alert, AlertDescription } from "../components/ui/alert";
-import {  Mail } from "lucide-react";
+import { Mail, Eye, EyeOff } from "lucide-react";
 import { FaGithub } from 'react-icons/fa';
-
-import api from "../utils/api.js";
+import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
@@ -23,45 +22,102 @@ const LoginPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError(false);
 
     if (!isLogin && password !== confirmPassword) {
       setAlertMessage("Passwords do not match.");
       setShowAlert(true);
+      setError(true);
+      setLoading(false);
       setTimeout(() => setShowAlert(false), 3000);
       return;
     }
 
-    const data = { email, password };
-    const endpoint = isLogin ? "/users/login" : "/users/register";
-
     try {
-      const response = await api.post(endpoint, data);
-      console.log(response);
-
-      if (response.status === (isLogin ? 200 : 201)) {
-        setAlertMessage(isLogin ? "Successfully logged in!" : "Successfully registered!");
-        setTimeout(() => {
-          navigate(isLogin ? "/" : "/login");
-        }, 3000);
+      let response;
+      
+      if (isLogin) {
+        // Handle login
+        response = await axios.post('http://localhost:3000/api/v1/users/login', 
+          { email, password },
+          { withCredentials: true }
+        );
+        
+        if (response.data.success) {
+          setAlertMessage("Successfully logged in!");
+          setShowAlert(true);
+          
+          // Store auth status and tokens
+          localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('accessToken', response.data.accessToken);
+          
+          if (response.data.user) {
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+          }
+          
+          setTimeout(() => {
+            navigate('/');
+          }, 1500);
+        }
       } else {
-        throw new Error(isLogin ? "Login failed" : "Registration failed");
+        // For simple registration (redirect to full registration page)
+        setAlertMessage("Redirecting to registration page...");
+        setShowAlert(true);
+        setTimeout(() => {
+          navigate('/register');
+        }, 1500);
+        return;
       }
     } catch (error) {
       console.error(`${isLogin ? "Login" : "Signup"} error:`, error);
-      setAlertMessage(isLogin ? "Failed to login, please try again." : "Failed to register, please try again.");
+      setError(true);
+      setAlertMessage(
+        error.response?.data?.message || 
+        (isLogin ? "Failed to login, please try again." : "Failed to register, please try again.")
+      );
+      setShowAlert(true);
+    } finally {
+      setLoading(false);
+      setTimeout(() => setShowAlert(false), 3000);
     }
-    setShowAlert(true);
-    setTimeout(() => setShowAlert(false), 3000);
   };
 
-  const handleSocialLogin = (provider) => {
-    setAlertMessage(`${isLogin ? "Logging in" : "Signing up"} with ${provider}`);
-    setShowAlert(true);
-    setTimeout(() => setShowAlert(false), 3000);
+  const handleSocialLogin = async (provider) => {
+    try {
+      setLoading(true);
+      setAlertMessage(`${isLogin ? "Logging in" : "Signing up"} with ${provider}...`);
+      setShowAlert(true);
+      
+      // Call social login endpoint
+      const response = await axios.post(
+        'http://localhost:3000/api/v1/users/social/login',
+        { provider: provider.toLowerCase() },
+        { withCredentials: true }
+      );
+      
+      if (response.data.redirectUrl) {
+        // Redirect to OAuth provider
+        window.location.href = response.data.redirectUrl;
+      } else {
+        throw new Error('No redirect URL provided');
+      }
+    } catch (error) {
+      console.error(`Social ${isLogin ? "login" : "signup"} error:`, error);
+      setError(true);
+      setAlertMessage(`Failed to ${isLogin ? "login" : "register"} with ${provider}`);
+      setShowAlert(true);
+    } finally {
+      setLoading(false);
+      setTimeout(() => setShowAlert(false), 3000);
+    }
   };
 
   return (
@@ -69,7 +125,7 @@ const LoginPage = () => {
       <div className="w-full max-w-md">
         {showAlert && (
           <div className="mb-4">
-            <Alert>
+            <Alert variant={error ? "destructive" : "default"}>
               <AlertDescription>{alertMessage}</AlertDescription>
             </Alert>
           </div>
@@ -90,20 +146,33 @@ const LoginPage = () => {
                   id="email"
                   type="email"
                   placeholder="name@example.com"
+                  value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={loading}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               {!isLogin && (
@@ -113,8 +182,10 @@ const LoginPage = () => {
                     id="confirm-password"
                     type="password"
                     placeholder="••••••••"
+                    value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
+                    disabled={loading}
                   />
                 </div>
               )}
@@ -123,15 +194,19 @@ const LoginPage = () => {
                 <div className="flex justify-end">
                   <Button
                     variant="link"
+                    type="button"
                     className="px-0 font-normal text-sm text-blue-600"
+                    onClick={() => navigate('/forgot-password')}
                   >
                     Forgot password?
                   </Button>
                 </div>
               )}
 
-              <Button type="submit" className="w-full">
-                {isLogin ? "Sign In" : "Sign Up"}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading 
+                  ? (isLogin ? "Signing In..." : "Creating Account...") 
+                  : (isLogin ? "Sign In" : "Sign Up")}
               </Button>
             </form>
 
@@ -151,6 +226,7 @@ const LoginPage = () => {
                 variant="outline"
                 onClick={() => handleSocialLogin("Google")}
                 className="w-full"
+                disabled={loading}
               >
                 <Mail className="mr-2 h-4 w-4" />
                 Google
@@ -159,6 +235,7 @@ const LoginPage = () => {
                 variant="outline"
                 onClick={() => handleSocialLogin("GitHub")}
                 className="w-full"
+                disabled={loading}
               >
                 <FaGithub className="mr-2 h-4 w-4" />
                 GitHub
@@ -169,12 +246,19 @@ const LoginPage = () => {
           <CardFooter className="flex justify-center">
             <Button
               variant="link"
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={() => {
+                if (!isLogin) {
+                  navigate('/register');
+                } else {
+                  setIsLogin(!isLogin);
+                }
+              }}
               className="text-sm"
+              disabled={loading}
             >
               {isLogin
                 ? "Don't have an account? Sign up"
-                : `Already have an account? Sign in`}
+                : "Already have an account? Sign in"}
             </Button>
           </CardFooter>
         </Card>

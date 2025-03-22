@@ -1,31 +1,54 @@
 import jwt from "jsonwebtoken";
-import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiError } from "../utils/ApiError.js";
+import User from "../models/UserModel.js";
 
-const jwtVerification = asyncHandler(async (req, res, next) => {
+export const jwtVerification = async (req, res, next) => {
   try {
-    const token = 
-      req.cookies?.accessToken || 
-      req.headers.authorization?.replace("Bearer ", "");
-
+    // Check for token in cookies first (preferred method)
+    const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+    
     if (!token) {
-      throw new ApiError(401, "No token provided");
+      console.log("No token provided");
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required. Please login."
+      });
     }
 
-    console.log("token :", token);
+    // Verify the token
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     
+    // Find user based on decoded token
+    const user = await User.findById(decodedToken._id).select("-password -refreshToken");
+    if (!user) {
+      console.log("User not found with token ID:", decodedToken._id);
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token or user not found"
+      });
+    }
 
-    const decoded = jwt.verify(token, process.env.JWT_ACCESS_TOKEN_SECRET);
-    req.user = {_id:decoded.id};
-
+    // Attach user to request object
+    req.user = user;
     next();
   } catch (error) {
-    console.error("JWT Verification Err or ", error.message);
-    throw new ApiError(
-      401,
-      error.message || "Not authorized, token is not valid"
-    );
+    if (error.name === 'JsonWebTokenError') {
+      console.log("JWT Error:", error.message);
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token"
+      });
+    } else if (error.name === 'TokenExpiredError') {
+      console.log("Token expired");
+      return res.status(401).json({
+        success: false,
+        message: "Token expired"
+      });
+    }
+    
+    console.log("JWT Verification Error:", error.message);
+    return res.status(401).json({
+      success: false,
+      message: "Authentication failed"
+    });
   }
-});
-
-export { jwtVerification };
+};

@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import axios from 'axios';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
-import  Button  from "../components/Button";
-import Input  from "../components/Input";
+import Button from "../components/Button";
+import Input from "../components/Input";
 import { Label } from "../components/ui/label";
 import { Alert, AlertDescription } from "../components/ui/alert";
-import { Github, Mail, Eye, EyeOff } from "lucide-react";
+import { Github, Mail, Eye, EyeOff, Upload } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 
 const RegistrationPage = () => {
-    console.log("RegistrationPage");
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -23,6 +23,34 @@ const RegistrationPage = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // References for file inputs
+  const avatarRef = useRef(null);
+  const coverImageRef = useRef(null);
+  
+  // File state
+  const [avatar, setAvatar] = useState(null);
+  const [coverImage, setCoverImage] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  
+  const handleFileChange = (e, type) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (type === 'avatar') {
+      setAvatar(file);
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        setAvatarPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setCoverImage(file);
+    }
+  };
 
   const checkPasswordStrength = (password) => {
     let strength = 0;
@@ -45,17 +73,63 @@ const RegistrationPage = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (formData.password !== formData.confirmPassword) {
       setAlertMessage('Passwords do not match!');
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 3000);
       return;
     }
-    setAlertMessage('Registration successful! Please verify your email.');
-    setShowAlert(true);
-    setTimeout(() => setShowAlert(false), 3000);
+    
+    // Create form data for file upload
+    const submitData = new FormData();
+    submitData.append('firstName', formData.firstName);
+    submitData.append('lastName', formData.lastName);
+    submitData.append('email', formData.email);
+    submitData.append('password', formData.password);
+    
+    if (formData.phone) submitData.append('phone', formData.phone);
+    if (formData.role) submitData.append('role', formData.role);
+    
+    // Append files if they exist
+    if (avatar) submitData.append('avatar', avatar);
+    if (coverImage) submitData.append('coverImage', coverImage);
+    
+    // Log the data being sent (for debugging)
+    console.log("Registration data:");
+    for (let [key, value] of submitData.entries()) {
+      console.log(`${key}: ${key === 'password' ? '********' : value}`);
+    }
+    
+    setLoading(true);
+    try {
+      // Check if we're using the correct endpoint URL
+
+      const response = await axios.post('http://localhost:3000/api/v1/users/register', submitData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        withCredentials: true // Include this to handle cookies properly
+      });
+      
+      console.log("Registration response:", response.data);
+      
+      setAlertMessage('Registration successful! Please verify your email.');
+      setShowAlert(true);
+      setTimeout(() => {
+        setShowAlert(false);
+        window.location.href = '/login';
+      }, 3000);
+    } catch (error) {
+      console.error('Registration error:', error);
+      setError(true);
+      setAlertMessage(error.response?.data?.message || 'Registration failed. Please try again.');
+      setShowAlert(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSocialRegister = (provider) => {
@@ -74,7 +148,7 @@ const RegistrationPage = () => {
       <div className="w-full max-w-lg">
         {showAlert && (
           <div className="mb-4">
-            <Alert>
+            <Alert variant={error ? "destructive" : "default"}>
               <AlertDescription>{alertMessage}</AlertDescription>
             </Alert>
           </div>
@@ -196,8 +270,62 @@ const RegistrationPage = () => {
                 />
               </div>
               
-              <Button type="submit" className="w-full">
-                Create Account
+              {/* Add file upload for avatar */}
+              <div className="space-y-2">
+                <Label htmlFor="avatar">Profile Picture</Label>
+                <div className="flex items-center gap-4">
+                  {avatarPreview && (
+                    <div className="h-20 w-20 rounded-full overflow-hidden">
+                      <img src={avatarPreview} alt="Avatar preview" className="h-full w-full object-cover" />
+                    </div>
+                  )}
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => avatarRef.current.click()}
+                    className="flex gap-2 items-center"
+                  >
+                    <Upload size={16} />
+                    Upload Avatar
+                  </Button>
+                  <input
+                    ref={avatarRef}
+                    type="file"
+                    id="avatar"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleFileChange(e, 'avatar')}
+                  />
+                </div>
+              </div>
+              
+              {/* Add file upload for cover image */}
+              <div className="space-y-2">
+                <Label htmlFor="coverImage">Cover Image (Optional)</Label>
+                <div className="flex items-center gap-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => coverImageRef.current.click()}
+                    className="flex gap-2 items-center"
+                  >
+                    <Upload size={16} />
+                    Upload Cover Image
+                  </Button>
+                  <input
+                    ref={coverImageRef}
+                    type="file"
+                    id="coverImage"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleFileChange(e, 'coverImage')}
+                  />
+                  {coverImage && <span className="text-sm text-gray-500">{coverImage.name}</span>}
+                </div>
+              </div>
+              
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Creating Account..." : "Create Account"}
               </Button>
             </form>
 
@@ -206,7 +334,7 @@ const RegistrationPage = () => {
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
+                <span className="px-2 bg-gray-100 text-gray-500">
                   Or register with
                 </span>
               </div>

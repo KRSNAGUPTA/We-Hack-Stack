@@ -8,6 +8,7 @@ import {
   updatePassword,
   updateUserFiles,
   updateUserTextDetails,
+  refreshAccessToken,  // Add this function
 } from "../controllers/userController.js";
 import { upload } from "../middlewares/multerMiddleware.js";
 import { jwtVerification } from "../middlewares/authMiddleware.js";
@@ -31,11 +32,11 @@ router.post(
 );
 
 router.route("/login").post(loginUser);
-// router.route("/social/login").post(socialLogin);
+router.route("/social/login").post(socialLogin);
 // protected routes
 router.route("/logout").post(jwtVerification, logoutUser);
-// router.route("/update-password").post(jwtVerification, updatePassword);
-// router.route("/update-details").post(jwtVerification, updateUserTextDetails);
+router.route("/update-password").post(jwtVerification, updatePassword);
+router.route("/update-details").post(jwtVerification, updateUserTextDetails);
 router.post(
   "/update-images",
   jwtVerification,
@@ -57,5 +58,8 @@ router.get("/get-cookie", (req, res) => {
     `Cookie value: RefreshToken: ${req.cookies.refreshToken} AccessToken : ${req.cookies.accessToken}`
   );
 });
+
+// Add refresh token route
+router.route("/refresh-token").post(refreshAccessToken);
 
 export default router;

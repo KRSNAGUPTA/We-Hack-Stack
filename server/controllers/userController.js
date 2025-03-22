@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import User from "../models/UserModel.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
+import jwt from "jsonwebtoken";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -31,172 +32,298 @@ const generateAccessandRefreshToken = async (id) => {
   }
 };
 
-const registerUser = asyncHandler(async (req, res) => {
-  let avatarLocalPath = "";
-  let coverImageLocalPath = "";
-
+export const registerUser = async (req, res) => {
   try {
-    const { email, username, fullName, password } = req.body;
-
-    if (!email) {
-      throw new ApiError(400, "Email required");
+    console.log("Registration request received:", req.body);
+    
+    // Check if all required fields are present
+    const { firstName, lastName, email, password } = req.body;
+    if (!firstName || !lastName || !email || !password) {
+      console.log("Missing required fields:", { firstName, lastName, email, password: password ? "provided" : "missing" });
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required"
+      });
     }
-
+    
+    console.log("Checking if user already exists...");
     // Check if user already exists
-    let user = await User.findOne({
-      email: email.toLowerCase(),
-    });
-
-    if (user) {
-      throw new ApiError(409, "User already exists");
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      console.log("User already exists with email:", email);
+      return res.status(409).json({
+        success: false,
+        message: "User with this email already exists"
+      });
     }
-
+    
+    console.log("Processing file uploads...");
     // Handle file uploads
-    if (req.files) {
-      if (Array.isArray(req.files.avatar) && req.files.avatar.length > 0) {
+    let avatarLocalPath;
+    let coverImageLocalPath;
+    
+    if (req.files && Object.keys(req.files).length > 0) {
+      console.log("Files received:", Object.keys(req.files));
+      
+      if (req.files.avatar && req.files.avatar.length > 0) {
         avatarLocalPath = req.files.avatar[0].path;
+        console.log("Avatar path:", avatarLocalPath);
       }
-
-      if (
-        Array.isArray(req.files.coverImage) &&
-        req.files.coverImage.length > 0
-      ) {
+      
+      if (req.files.coverImage && req.files.coverImage.length > 0) {
         coverImageLocalPath = req.files.coverImage[0].path;
+        console.log("Cover image path:", coverImageLocalPath);
       }
     }
-
-    // Upload images to Cloudinary
-    let avatar = null;
-    let coverImage = null;
-
+    
+    // Upload to cloudinary if there are files
+    let avatarUrl = "";
+    let coverImageUrl = "";
+    
     if (avatarLocalPath) {
-      avatar = await uploadOnCloudinary(avatarLocalPath);
-      if (!avatar || !avatar.url) {
-        throw new ApiError(500, "Failed to upload avatar");
+      console.log("Uploading avatar to cloudinary...");
+      try {
+        const avatarUpload = await uploadOnCloudinary(avatarLocalPath);
+        if (avatarUpload) {
+          avatarUrl = avatarUpload.url;
+          console.log("Avatar uploaded successfully:", avatarUrl);
+        } else {
+          console.log("Avatar upload failed");
+        }
+      } catch (cloudinaryError) {
+        console.error("Cloudinary avatar upload error:", cloudinaryError);
       }
     }
-
+    
     if (coverImageLocalPath) {
-      coverImage = await uploadOnCloudinary(coverImageLocalPath);
-      if (!coverImage || !coverImage.url) {
-        throw new ApiError(500, "Failed to upload cover image");
+      console.log("Uploading cover image to cloudinary...");
+      try {
+        const coverImageUpload = await uploadOnCloudinary(coverImageLocalPath);
+        if (coverImageUpload) {
+          coverImageUrl = coverImageUpload.url;
+          console.log("Cover image uploaded successfully:", coverImageUrl);
+        } else {
+          console.log("Cover image upload failed");
+        }
+      } catch (cloudinaryError) {
+        console.error("Cloudinary cover image upload error:", cloudinaryError);
       }
     }
-
-    // Create a new user
-    user = await User.create({
-      email: email.toLowerCase(),
-      username: username.toLowerCase(),
-      fullName,
+    
+    // Create user object
+    console.log("Creating user in database...");
+    const user = await User.create({
+      firstName,
+      lastName,
+      email,
       password,
-      avatar: avatar ? avatar.url : "",
-      coverImage: coverImage ? coverImage.url : "",
-      lastLogin: Date.now(),
+      phone: req.body.phone || "",
+      role: req.body.role || "user",
+      avatar: avatarUrl,
+      coverImage: coverImageUrl || ""
     });
+    
+    console.log("User created with ID:", user._id);
+    
+    // Generate tokens
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    
+    // Update user with refresh token
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+    
+    // Set up cookie options
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production"
+    };
+    
+    // Send response with cookies
+    return res
+      .status(201)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", refreshToken, {
+        ...cookieOptions,
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      })
+      .json({
+        success: true,
+        message: "User registered successfully",
+        user: {
+          _id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          avatar: user.avatar
+        },
+        accessToken
+      });
+      
+  } catch (error) {
+    console.error("Registration error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error during registration"
+    });
+  }
+};
 
-    // Exclude sensitive fields from response
-    const createdUser = await User.findById(user._id).select(
-      "-password -refreshToken -__v"
-    );
+export const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required"
+      });
+    }
 
-    if (!createdUser) {
-      throw new ApiError(500, "Failed to create user");
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Check if password is correct
+    const isPasswordValid = await user.isPasswordCorrect(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials"
+      });
     }
 
     // Generate tokens
-    const tokens = await generateAccessandRefreshToken(createdUser._id);
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
 
-    console.log(`${username} registered successfully\n`);
-    return res
-      .status(201)
-      .json(
-        new ApiResponse(
-          201,
-          { user: createdUser, tokens },
-          "User registered successfully"
-        )
-      );
-  } catch (error) {
-    // Cleanup any local files if an error occurs
-    if (avatarLocalPath && fs.existsSync(avatarLocalPath)) {
-      fs.unlinkSync(avatarLocalPath);
-    }
-    if (coverImageLocalPath && fs.existsSync(coverImageLocalPath)) {
-      fs.unlinkSync(coverImageLocalPath);
-    }
-
-    return res
-      .status(error.statusCode || 500)
-      .json(
-        new ApiError(
-          error.statusCode || 500,
-          error.message || "Error while registering the user"
-        )
-      );
-  }
-});
-
-const loginUser = asyncHandler(async (req, res) => {
-  try {
-    const { email, username, password } = req.body;
-
-    if ((!email && !username) || !password) {
-      throw new ApiError(400, "Email or username and password required");
-    }
-
-    const user = await User.findOne({
-      $or: [
-        { email: email?.toLowerCase() },
-        { username: username?.toLowerCase() },
-      ],
-    });
-
-    if (!user) throw new ApiError(400, "User not found");
-
-    const isCorrectPassword = await user.isPasswordCorrect(password);
-
-    if (!isCorrectPassword) {
-      throw new ApiError(401, "Incorrect password");
-    }
-
-    const { accessToken, refreshToken } = await generateAccessandRefreshToken(
-      user._id
-    );
-
-    const loggedInUser = await User.findById(user._id).select(
-      "-password -refreshToken"
-    );
-
+    // Update user with refresh token
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+  console.log(user);
+    // Set up cookie options
     const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "None",
+      secure: process.env.NODE_ENV === "production"
     };
 
-    console.log(`\n${loggedInUser.username} logged in successfully`);
+    // Send response with cookies
+    console.log(`User ${user._id} logged in successfully`);
     return res
       .status(200)
       .cookie("accessToken", accessToken, cookieOptions)
-      .cookie("refreshToken", refreshToken, cookieOptions)
-      .json(
-        new ApiResponse(
-          200,
-          { user: loggedInUser, tokens: { accessToken, refreshToken } },
-          "User logged in successfully"
-        )
-      );
+      .cookie("refreshToken", refreshToken, {
+        ...cookieOptions,
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      })
+      .json({
+        success: true,
+        message: "Login successful",
+        user: {
+          _id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          avatar: user.avatar
+        },
+        accessToken
+      });
   } catch (error) {
-    return res
-      .status(error.statusCode || 401)
-      .json(new ApiError(error.statusCode || 401, error.message));
+    console.error("Login error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error during login"
+    });
   }
-});
+};
 
-const socialLogin = asyncHandler(async (req, res) => {
+export const refreshAccessToken = async (req, res) => {
+  try {
+    const incomingRefreshToken = req.cookies?.refreshToken || req.body.refreshToken;
+    
+    if (!incomingRefreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token is required"
+      });
+    }
+    
+    try {
+      // Verify the refresh token
+      const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+      
+      // Find the user
+      const user = await User.findById(decodedToken._id);
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid refresh token"
+        });
+      }
+      
+      // Check if the incoming refresh token matches the one saved in the DB
+      if (user.refreshToken !== incomingRefreshToken) {
+        return res.status(401).json({
+          success: false,
+          message: "Refresh token is expired or used"
+        });
+      }
+      
+      // Generate new tokens
+      const accessToken = user.generateAccessToken();
+      const refreshToken = user.generateRefreshToken();
+      
+      // Update user with new refresh token
+      user.refreshToken = refreshToken;
+      await user.save({ validateBeforeSave: false });
+      
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production"
+      };
+      
+      // Send response with new tokens
+      return res
+        .status(200)
+        .cookie("accessToken", accessToken, cookieOptions)
+        .cookie("refreshToken", refreshToken, {
+          ...cookieOptions,
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        })
+        .json({
+          success: true,
+          message: "Access token refreshed",
+          accessToken
+        });
+        
+    } catch (error) {
+      // Token verification failed
+      return res.status(401).json({
+        success: false,
+        message: "Invalid refresh token"
+      });
+    }
+    
+  } catch (error) {
+    console.error("Token refresh error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error during token refresh"
+    });
+  }
+};
+
+export const socialLogin = asyncHandler(async (req, res) => {
   try {
     const { email, avatar, fullName, socialId, provider } = req.body;
     let username = req.body.username;
-
+    
     const generateUsername = async (email, socialId) => {
       const baseUsername = email ? email.split("@")[0] : `user-${socialId}`;
       let username = baseUsername;
@@ -212,7 +339,7 @@ const socialLogin = asyncHandler(async (req, res) => {
     if (!username) {
       username = await generateUsername(email, socialId);
     }
-
+    
     const data = {
       email,
       avatar,
@@ -222,16 +349,16 @@ const socialLogin = asyncHandler(async (req, res) => {
       provider,
       lastLogin: Date.now(),
     };
-
+    
     const existingUserByEmail = await User.findOne({ email });
-
+    
     if (existingUserByEmail) {
       if (existingUserByEmail.socialId !== socialId) {
         existingUserByEmail.socialId = socialId;
         existingUserByEmail.avatar = avatar || existingUserByEmail.avatar;
         existingUserByEmail.lastLogin = Date.now();
         await existingUserByEmail.save();
-
+        
         const tokens = await generateAccessandRefreshToken(
           existingUserByEmail._id
         );
@@ -290,7 +417,7 @@ const socialLogin = asyncHandler(async (req, res) => {
           )
         );
     }
-
+    
     return res
       .status(401)
       .json(new ApiError(401, "User already exists with this social account"));
@@ -301,7 +428,7 @@ const socialLogin = asyncHandler(async (req, res) => {
   }
 });
 
-const updatePassword = asyncHandler(async (req, res) => {
+export const updatePassword = asyncHandler(async (req, res) => {
   try {
     const userId = req.user._id;
     const user = await User.findById(userId);
@@ -309,24 +436,25 @@ const updatePassword = asyncHandler(async (req, res) => {
       throw new ApiError(404, "User not found");
     }
     const { currentPassword, newPassword, confirmPassword } = req.body;
-    // console.log("Current" , currentPassword);
-    // console.log("new" , newPassword);
-    // console.log("confirm" , confirmPassword);
-
+    
     if (newPassword !== confirmPassword) {
       throw new ApiError(400, "Passwords do not match");
     }
+    
     if (!user.isPasswordCorrect(currentPassword)) {
       throw new ApiError(401, "Incorrect current password");
     }
+    
     if (newPassword.length < 8) {
       throw new ApiError(400, "Password must be at least 8 characters long");
     }
+    
     user.password = newPassword;
     const updatedUser = await user.save();
     if (!updatedUser) {
       return new ApiError(403, "Failed to update Password");
     }
+    
     return res
       .status(200)
       .json(new ApiResponse(200, "Password updated successfully"));
@@ -342,7 +470,7 @@ const updatePassword = asyncHandler(async (req, res) => {
   }
 });
 
-const logoutUser = asyncHandler(async (req, res) => {
+export const logoutUser = asyncHandler(async (req, res) => {
   try {
     const userId = req.user._id;
 
@@ -355,7 +483,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     if (!user) {
       throw new ApiError(400, "Failed to logout, user not found");
     }
-
+    
     const option = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -386,7 +514,7 @@ const logoutUser = asyncHandler(async (req, res) => {
   }
 });
 
-const updateUserTextDetails = asyncHandler(async (req, res) => {
+export const updateUserTextDetails = asyncHandler(async (req, res) => {
   try {
     const userId = req.user._id;
     const user = await User.findById(userId);
@@ -394,9 +522,9 @@ const updateUserTextDetails = asyncHandler(async (req, res) => {
     if (!user) {
       throw new ApiError(404, "User not found");
     }
-
+    
     const { email, username, fullName } = req.body;
-
+    
     // Check and update email
     if (email) {
       const existingUserWithEmail = await User.findOne({ email });
@@ -407,7 +535,7 @@ const updateUserTextDetails = asyncHandler(async (req, res) => {
       }
       user.email = email;
     }
-
+    
     // Check and update username
     if (username) {
       if (username.includes(" ")) {
@@ -447,7 +575,7 @@ const updateUserTextDetails = asyncHandler(async (req, res) => {
   }
 });
 
-const updateUserFiles = asyncHandler(async (req, res) => {
+export const updateUserFiles = asyncHandler(async (req, res) => {
   try {
     const userId = req.user._id;
     const user = await User.findById(userId);
@@ -455,9 +583,9 @@ const updateUserFiles = asyncHandler(async (req, res) => {
     if (!user) {
       throw new ApiError(404, "User not found");
     }
-
+    
     const { avatar, coverImage } = req.files;
-
+    
     if (avatar) {
       const avatarCloudinary = await uploadOnCloudinary(avatar[0].path);
       if (!avatarCloudinary) {
@@ -465,7 +593,7 @@ const updateUserFiles = asyncHandler(async (req, res) => {
       }
       user.avatar = avatarCloudinary.url;
     }
-
+    
     if (coverImage) {
       const coverimgCloudinary = await uploadOnCloudinary(coverImage[0].path);
       if (!coverimgCloudinary) {
@@ -473,7 +601,7 @@ const updateUserFiles = asyncHandler(async (req, res) => {
       }
       user.coverImage = coverimgCloudinary.url;
     }
-
+    
     const updatedUser = await user.save();
     return res
       .status(200)
@@ -489,18 +617,20 @@ const updateUserFiles = asyncHandler(async (req, res) => {
       );
   }
 });
-const getUserDetails = asyncHandler(async (req, res) => {
+
+export const getUserDetails = asyncHandler(async (req, res) => {
   try {
     const userId = req.user._id;
     const userDetails = await User.findById(userId).select(
       "-password -refreshToken -socialId -provider -lastLogin"
     );
+    
     if (!userDetails) {
       return new ApiError(404, "User not found");
     }
+    
     return res
       .status(200)
-
       .json(
         new ApiResponse(200, userDetails, "User details fetched successfully")
       );
@@ -516,13 +646,3 @@ const getUserDetails = asyncHandler(async (req, res) => {
   }
 });
 
-export {
-  registerUser,
-  loginUser,
-  socialLogin,
-  logoutUser,
-  updatePassword,
-  updateUserFiles,
-  updateUserTextDetails,
-  getUserDetails,
-};

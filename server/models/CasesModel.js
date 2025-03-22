@@ -1,7 +1,11 @@
-//schema which has id , casetitle and casesummery
 import mongoose from "mongoose";
 const caseSchema = new mongoose.Schema({
-  caseTitle: {
+  CaseId: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  CaseTitle: {
     type: String,
     required: true,
   },
@@ -10,6 +14,7 @@ const caseSchema = new mongoose.Schema({
     required: true,
   },
 });
+
 
 const Cases = mongoose.model("Cases", caseSchema);
 export default Cases;

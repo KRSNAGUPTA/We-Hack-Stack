@@ -36,7 +36,6 @@ export const registerUser = async (req, res) => {
   try {
     console.log("Registration request received:", req.body);
     
-    // Check if all required fields are present
     const { firstName, lastName, email, password } = req.body;
     if (!firstName || !lastName || !email || !password) {
       console.log("Missing required fields:", { firstName, lastName, email, password: password ? "provided" : "missing" });
@@ -47,7 +46,6 @@ export const registerUser = async (req, res) => {
     }
     
     console.log("Checking if user already exists...");
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       console.log("User already exists with email:", email);
@@ -58,7 +56,6 @@ export const registerUser = async (req, res) => {
     }
     
     console.log("Processing file uploads...");
-    // Handle file uploads
     let avatarLocalPath;
     let coverImageLocalPath;
     
@@ -76,7 +73,6 @@ export const registerUser = async (req, res) => {
       }
     }
     
-    // Upload to cloudinary if there are files
     let avatarUrl = "";
     let coverImageUrl = "";
     

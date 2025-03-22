@@ -17,7 +17,7 @@ function Header() {
           <Search />
         </DockIcon>
         <Separator orientation="vertical" />
-        <DockIcon onClick={() => navigate("/bot")}>
+        <DockIcon onClick={() => navigate("/chat")}>
           <Bot />
         </DockIcon>
       </Dock>

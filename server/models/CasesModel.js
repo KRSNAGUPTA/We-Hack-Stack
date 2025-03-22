@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 const caseSchema = new mongoose.Schema({
+  _id:String,
   CaseId: {
     type: String,
     required: true,

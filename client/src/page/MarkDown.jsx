@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/Button";
+import Button  from "../components/Button";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Download, Copy, FileText, Loader2 } from "lucide-react";
 import { useParams } from "react-router-dom";

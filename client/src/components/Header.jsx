@@ -9,7 +9,7 @@ function Header() {
   return (
     <div>
       <Dock direction="middle">
-        <DockIcon>
+        <DockIcon onClick={() => navigate("/")}>
           <Home className="text-indigo-700"/>
         </DockIcon>
         <Separator orientation="vertical" />

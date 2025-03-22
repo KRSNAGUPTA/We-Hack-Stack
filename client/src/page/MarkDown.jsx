@@ -4,6 +4,9 @@ import Button  from "../components/Button";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Download, Copy, FileText, Loader2 } from "lucide-react";
 import { useParams } from "react-router-dom";
+import api from "@/utils/api";
+import ReactMarkdown from "react-markdown";
+import Header from "@/components/Header";
 
 const MarkDown = () => {
   const { id } = useParams();
@@ -21,16 +24,14 @@ const MarkDown = () => {
     try {
       setIsLoading(true);
       setError(null);
-    //   console.log("id",id   );
-      
-      // Replace with your actual API endpoint
       const response = await api.get(`/cases/${id}`);
-      console.log("response",response);
-      if (!response.ok) {
-        throw new Error("Failed to fetch document");
-      }
-      const data = await response.json();
-      setMarkdownContent(data.content);
+      // console.log("response",response);
+      // if (!response.ok) {
+      //   throw new Error("Failed to fetch document");
+      // }
+      // const data = await response.json();
+      setMarkdownContent(response.data.CaseSummary);
+      console.log(response.data)
     } catch (err) {
       setError(err.message);
     } finally {
@@ -55,7 +56,6 @@ const MarkDown = () => {
 
   const handleDownloadPDF = async () => {
     try {
-      // Replace with your actual PDF download endpoint
       const response = await fetch("/api/document/pdf");
       if (!response.ok) {
         throw new Error("Failed to download PDF");
@@ -85,6 +85,7 @@ const MarkDown = () => {
             <Alert variant="destructive">
               <AlertDescription>
                 Error loading document: {error}
+                {console.log(error)}
                 <Button
                   variant="outline"
                   onClick={fetchDocument}
@@ -102,6 +103,9 @@ const MarkDown = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+        <Header />
+      </div>
       <div className="w-full max-w-4xl">
         {showAlert && (
           <div className="mb-4">
@@ -147,10 +151,7 @@ const MarkDown = () => {
               </div>
             ) : (
               <div className="bg-white rounded-lg border p-6 prose prose-slate max-w-none">
-                <div
-                  dangerouslySetInnerHTML={{ __html: markdownContent }}
-                  className="space-y-4"
-                />
+                <ReactMarkdown>{markdownContent}</ReactMarkdown>
               </div>
             )}
           </CardContent>

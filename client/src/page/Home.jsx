@@ -28,37 +28,7 @@ export default function LandingPage() {
       <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-10">
         <Header />
       </div>
-      {/* <header className="border-b ">
-        <div className="container flex items-center justify-between py-4 bg-slate-300 rounded-xl p-4">
-          <div className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-blue-600" />
-            <span className="text-xl font-bold">LegalEase</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="#features" className="text-sm font-medium hover:text-blue-600 transition-colors">
-              Features
-            </Link>
-            <Link href="#modules" className="text-sm font-medium hover:text-blue-600 transition-colors">
-              Learning Modules
-            </Link>
-            <Link href="#chatbot" className="text-sm font-medium hover:text-blue-600 transition-colors">
-              AI Chatbot
-            </Link>
-            <Link href="#gamification" className="text-sm font-medium hover:text-blue-600 transition-colors">
-              Gamification
-            </Link>
-            <Link href="#cases" className="text-sm font-medium hover:text-blue-600 transition-colors">
-              Case Studies
-            </Link>
-          </nav>
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm">
-              Log in
-            </Button>
-            <Button size="sm">Sign up</Button>
-          </div>
-        </div>
-      </header> */}
+      
 
       <main className="flex-1 p-1 ">
         {/* Hero Section */}

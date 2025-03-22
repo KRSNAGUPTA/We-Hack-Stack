@@ -1,61 +1,154 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import QuizModel from "../models/QuizModel.js";
 
-const apiKey = process.env.GEMINI_API_KEY;
-const genAI = new GoogleGenerativeAI(apiKey);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-export default async function generateQuiz  (req, res)  {
+export const getQuiz = async (req, res) => {
   try {
-    const { topic, difficulty } = req.body;
-
-    if (!topic || !difficulty ) {
-      return res.status(400).json({ error: "All fields are required" });
-    }
-
-    const prompt = `
-  Generate a multiple-choice quiz strictly on **legal laws and related topics**.
-
-  **Guidelines:**
-  - The quiz must be related to **criminal law, civil law, constitutional law, corporate law, intellectual property law, human rights law, or international law**.
-  - The topic entered by the user is: **"${topic}"**.
-  - If the topic is **not related to law**, ignore it and generate a **legally relevant** quiz instead.
-  - Ensure questions are fact-based and aligned with actual legal principles.
-  - Avoid fictional scenarios, political bias, or speculative questions.
-
-  **Quiz Format:**
-  - **Number of Questions:** Exactly **10**
-  - **Difficulty Level:** ${difficulty}
-  - Each question should have:
-    - A clear and precise legal question.
-    - Four answer choices labeled (A, B, C, D).
-    - A correct answer marked in "answer" field.
-    - NO extra formatting like markdown  or explanations.
-  **Output JSON format:**  
-  [
-    { "question": "What is the primary purpose of contract law?", "options": ["A. Enforce agreements", "B. Punish criminals", "C. Protect copyrights", "D. Regulate elections"], "answer": "A" },
-    { "question": "Which amendment in the U.S. Constitution protects against self-incrimination?", "options": ["A. First Amendment", "B. Fourth Amendment", "C. Fifth Amendment", "D. Sixth Amendment"], "answer": "C" }
-  ]
-
-  **Generate exactly 10 questions now.**
-  ### **STRICT JSON OUTPUT (NO EXTRAS)**
-`;
-    const result = await model.generateContent(prompt);
-    const responseText = await result.response.text();
-    const cleanJSON = responseText.replace(/```json|```/g, "").trim();
-
-
-    // console.log(cleanJSON);
-    let quizData;
-    
-    try {
-      quizData = JSON.parse(cleanJSON);
-    } catch (error) {
-      return res.status(500).json({ error: "Failed to parse Gemini response" });
-    }
-
-    res.json({ quiz: quizData });
+    const quiz = await QuizModel.find();
+    return res.status(200).json({ quiz });
   } catch (error) {
-    console.error("Gemini API Error:", error);
-    res.status(500).json({ error: "Failed to generate quiz" });
+    console.error("Error fetching quiz:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+export const getRandomQuiz = async (req, res) => {
+  try {
+    const { category = [], size = 10 } = req.query;
+    const quiz = await QuizModel.find();
+    const len = quiz.length;
+    let i = 0;
+    let randomQuiz = [];
+    while (i < size && i < len) {
+      const randomIndex = Math.floor(Math.random() * len);
+      const randomQuizItem = quiz[randomIndex];
+      if (
+        (category.length === 0 || category.includes(randomQuizItem.category)) &&
+        !randomQuiz.some(
+          (item) => item._id.toString() === randomQuizItem._id.toString()
+        )
+      ) {
+        randomQuiz.push(randomQuizItem);
+        i++;
+      }
+    }
+    return res.status(200).json({ randomQuiz });
+  } catch (error) {
+    console.error("Error fetching random quiz:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const addQuiz = async (req, res) => {
+  try {
+    const {
+      category,
+      legalReference,
+      quizQuestion,
+      quizAnswers,
+      explanation,
+      difficulty,
+    } = req.body;
+    if (
+      category &&
+      ![
+        "Traffic Laws",
+        "Civil Laws",
+        "Criminal Laws",
+        "Fines",
+        "General Rules",
+      ].includes(category)
+    ) {
+      return res.status(400).json({ message: "Invalid category" });
+    }
+    if (quizAnswers && quizAnswers.length < 2) {
+      return res
+        .status(400)
+        .json({ message: "At least two answers are required." });
+    }
+    if (difficulty && !["Easy", "Medium", "Hard"].includes(difficulty)) {
+      return res.status(400).json({ message: "Invalid difficulty level" });
+    }
+    if (!explanation) {
+      return res.status(400).json({ message: "Explanation is required" });
+    }
+    if (!quizQuestion) {
+      return res.status(400).json({ message: "Quiz question is required" });
+    }
+    const quiz = await QuizModel.create({
+      category,
+      legalReference,
+      quizQuestion,
+      quizAnswers,
+      explanation,
+      difficulty,
+    });
+    return res.status(200).json({ message: "Quiz added successfully", quiz });
+  } catch (error) {
+    console.error("Error adding quiz:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+export const bulkAddQuiz = async (req, res) => {
+  try {
+    const quizzes = req.body;
+
+    if (!Array.isArray(quizzes) || quizzes.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Please provide an array of quizzes." });
+    }
+
+    const validCategories = [
+      "Traffic Laws",
+      "Civil Laws",
+      "Criminal Laws",
+      "Fines",
+      "General Rules",
+    ];
+    const validDifficulties = ["Easy", "Medium", "Hard"];
+
+    for (let i = 0; i < quizzes.length; i++) {
+      const quiz = quizzes[i];
+      const {
+        category,
+        legalReference,
+        quizQuestion,
+        quizAnswers,
+        explanation,
+        difficulty,
+      } = quiz;
+
+      if (category && !validCategories.includes(category)) {
+        return res
+          .status(400)
+          .json({ message: `Invalid category at index ${i}` });
+      }
+      if (quizAnswers && quizAnswers.length < 2) {
+        return res
+          .status(400)
+          .json({ message: `At least two answers are required at index ${i}` });
+      }
+      if (difficulty && !validDifficulties.includes(difficulty)) {
+        return res
+          .status(400)
+          .json({ message: `Invalid difficulty level at index ${i}` });
+      }
+      if (!explanation) {
+        return res
+          .status(400)
+          .json({ message: `Explanation is required at index ${i}` });
+      }
+      if (!quizQuestion) {
+        return res
+          .status(400)
+          .json({ message: `Quiz question is required at index ${i}` });
+      }
+    }
+
+    const result = await QuizModel.insertMany(quizzes);
+    return res
+      .status(201)
+      .json({ message: "Quizzes added successfully", result });
+  } catch (error) {
+    console.error("Error adding quizzes:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

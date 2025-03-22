@@ -1,6 +1,5 @@
 import express from "express";
 import dotenv from "dotenv";
-import cookieParser from "cookie-parser";
 import cors from "cors";
 import { connectDB } from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -12,12 +11,9 @@ connectDB();
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production" ? "*" : process.env.CORS_ORIGIN,
-    credentials: true,
+    origin: "*"
   })
 );
 app.use(express.json());
@@ -27,7 +23,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/users", userRoutes);
-app.use("/api/v1/cases", caseRoutes );
+app.use("/api/v1/cases", caseRoutes);
 
 app.use(errorHandler);
 

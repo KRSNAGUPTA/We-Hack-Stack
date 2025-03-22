@@ -7,7 +7,7 @@ const RegistrationPage = lazy(() => import("./page/RegistrationPage.jsx"));
 const LoginPage = lazy(()=>import("./page/LoginPage.jsx"))
 const CaseDocumentsPage = lazy(() => import("./page/caseDocumentsPage.jsx"));
 const MarkDown = lazy(() => import("./page/MarkDown.jsx"));
-
+const Chatbot = lazy(() => import("./page/Chatbot.jsx"));
 function App() {
   return (
     <AuthProvider>
@@ -17,6 +17,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/case" element={<CaseDocumentsPage />} />
             <Route path="/case/:id" element={<MarkDown />} />
+            <Route path="/chat" element={<Chatbot/>} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegistrationPage />} />
           </Routes>

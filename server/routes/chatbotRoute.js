@@ -3,6 +3,6 @@ import chatResponse from '../controllers/chatbotController.js';
 
 const router = Router();
 
-router.post('', chatResponse);
+router.post('/chat', chatResponse);
 
 export default router;

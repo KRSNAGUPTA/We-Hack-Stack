@@ -19,7 +19,7 @@ const getCasesById = async (req, res) => {
   try {
     const { id } = req.params;
     const data = await Cases.findOne({
-      CaseId:id
+      _id:id
     })
     console.log("data",data);
 

@@ -17,13 +17,16 @@ import {
   Users,
   Lock,
 } from "lucide-react"
-
+// #F8FAFC
+// #D9EAFD
+// #BCCCDC
+// #9AA6B2
 export default function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen p-1">
       {/* Navigation */}
-      <header className="border-b">
-        <div className="container flex items-center justify-between py-4">
+      <header className="border-b ">
+        <div className="container flex items-center justify-between py-4 bg-slate-300 rounded-xl p-4">
           <div className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-blue-600" />
             <span className="text-xl font-bold">LegalEase</span>
@@ -54,20 +57,20 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 p-1 ">
         {/* Hero Section */}
-        <section className="py-20 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <section className="py-20 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
           <div className="container flex flex-col md:flex-row items-center gap-8">
             <div className="flex-1 space-y-6">
               <Badge className="px-3 py-1 bg-blue-100 text-blue-800 hover:bg-blue-100">Know Your Rights</Badge>
-              <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-                Making Legal Knowledge <span className="text-blue-600">Accessible to Everyone</span>
+              <h1 className="text-3xl md:text-3xl font-bold leading-tight">
+                Making Legal Knowledge <br/><span className="text-blue-600">Accessible to Everyone</span>
               </h1>
               <p className="text-lg text-gray-600 max-w-xl">
                 Simplifying complex laws through AI chatbots, interactive content, gamification, and real-life case
                 studies.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button size="lg" className="gap-2">
                   Get Started <ArrowRight className="h-4 w-4" />
                 </Button>
@@ -80,7 +83,7 @@ export default function LandingPage() {
               <img
                 src="/placeholder.svg?height=400&width=400"
                 alt="Legal education platform illustration"
-                className="rounded-lg shadow-lg"
+                className="rounded-lg shadow-lg bg-slate-400 "
                 width={400}
                 height={400}
               />
@@ -100,7 +103,7 @@ export default function LandingPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <Card className="hover:shadow-lg transition-shadow">
+              <Card className="hover:shadow-xl transition-shadow bg-slate-300">
                 <CardHeader>
                   <MessageSquare className="h-12 w-12 text-blue-600 mb-2" />
                   <CardTitle>AI-Powered Legal Chatbot</CardTitle>
@@ -118,7 +121,7 @@ export default function LandingPage() {
                 </CardFooter>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow">
+              <Card className="hover:shadow-xl transition-shadow bg-slate-300">
                 <CardHeader>
                   <BookOpen className="h-12 w-12 text-blue-600 mb-2" />
                   <CardTitle>Interactive Learning Modules</CardTitle>
@@ -136,7 +139,7 @@ export default function LandingPage() {
                 </CardFooter>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow">
+              <Card className="hover:shadow-xl transition-shadow bg-slate-300">
                 <CardHeader>
                   <Trophy className="h-12 w-12 text-blue-600 mb-2" />
                   <CardTitle>Gamified Quizzes & Rewards</CardTitle>
@@ -154,7 +157,7 @@ export default function LandingPage() {
                 </CardFooter>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow">
+              <Card className="hover:shadow-xl transition-shadow bg-slate-300">
                 <CardHeader>
                   <FileText className="h-12 w-12 text-blue-600 mb-2" />
                   <CardTitle>Real-Life Case Studies</CardTitle>
@@ -176,8 +179,8 @@ export default function LandingPage() {
         </section>
 
         {/* AI Chatbot Demo */}
-        <section id="chatbot" className="py-20 bg-gray-50">
-          <div className="container">
+        <section id="chatbot" className="py-20 bg-gray-100 rounded-xl p-2">
+          <div className="container m-2 p-4">
             <div className="flex flex-col md:flex-row items-center gap-12">
               <div className="flex-1 space-y-6">
                 <Badge className="px-3 py-1 bg-blue-100 text-blue-800 hover:bg-blue-100">AI-Powered</Badge>
@@ -257,7 +260,7 @@ export default function LandingPage() {
 
         {/* Interactive Learning Modules */}
         <section id="modules" className="py-20">
-          <div className="container">
+          <div className="container p-4 bg-gray-100 rounded-xl">
             <div className="text-center mb-16">
               <Badge className="mb-4 px-3 py-1 bg-blue-100 text-blue-800 hover:bg-blue-100">Learning Modules</Badge>
               <h2 className="text-3xl md:text-4xl font-bold mb-4">Structured Curriculum for Legal Education</h2>
@@ -266,7 +269,7 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <Tabs defaultValue="basic" className="max-w-4xl mx-auto">
+            <Tabs defaultValue="basic" className="max-w-4xl mx-auto bg-gray-300 rounded-lg shadow-lg p-4">
               <TabsList className="grid grid-cols-4 mb-8">
                 <TabsTrigger value="basic">Basic Rights</TabsTrigger>
                 <TabsTrigger value="property">Property Laws</TabsTrigger>
@@ -486,7 +489,7 @@ export default function LandingPage() {
         </section>
 
         {/* Gamification */}
-        <section id="gamification" className="py-20 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <section id="gamification" className="py-20 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
           <div className="container">
             <div className="text-center mb-16">
               <Badge className="mb-4 px-3 py-1 bg-blue-100 text-blue-800 hover:bg-blue-100">Gamification</Badge>
@@ -526,7 +529,7 @@ export default function LandingPage() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full">Submit Answer</Button>
+                  <Button className="w-full bg-black text-white">Submit Answer</Button>
                 </CardFooter>
               </Card>
 
@@ -578,8 +581,8 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full">
+                <CardFooter className="">
+                  <Button className="w-full bg-black text-white">
                     View All Badges
                   </Button>
                 </CardFooter>
@@ -641,7 +644,7 @@ export default function LandingPage() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">
+                  <Button  className="w-full bg-black text-white">
                     View Full Leaderboard
                   </Button>
                 </CardFooter>
@@ -698,7 +701,7 @@ export default function LandingPage() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full bg-black text-white">
                     Read Full Case Study
                   </Button>
                 </CardFooter>
@@ -731,14 +734,16 @@ export default function LandingPage() {
                       <div>
                         <h4 className="font-medium">Court Decision</h4>
                         <p className="text-sm text-gray-600">
-                          The court ruled in favor of the tenant, ordering the landlord to pay damages
+                          The court ruled in favor of the tenant, 
+                          ordering the landlord to pay damages
+                        
                         </p>
                       </div>
                     </div>
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full bg-black text-white">
                     Read Full Case Study
                   </Button>
                 </CardFooter>
@@ -748,7 +753,7 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 bg-blue-600 text-white">
+        <section className="py-20 bg-blue-600 text-white rounded-xl">
           <div className="container text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Know Your Legal Rights?</h2>
             <p className="text-xl mb-8 max-w-2xl mx-auto">
@@ -758,7 +763,7 @@ export default function LandingPage() {
               <Button size="lg" variant="secondary" className="gap-2">
                 Get Started for Free <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline" className="text-white border-white hover:bg-blue-700">
+              <Button size="lg" variant="outline" className="text-black border-white hover:bg-blue-700">
                 Learn More
               </Button>
             </div>

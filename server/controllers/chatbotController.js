@@ -20,7 +20,37 @@ import  {GoogleGenerativeAI} from "@google/generative-ai";
     maxOutputTokens: 8192,
     responseMimeType: "text/plain",
   };
-  
+  const legalSystemPrompt = `
+You are a legal expert chatbot. You must ONLY respond to queries about laws, legal concepts, and related topics. 
+DO NOT provide responses to unrelated questions. If a user asks about non-legal topics, politely redirect them.
+
+### Example Topics You Should Cover:
+- Criminal Law (e.g., theft, assault, fraud)
+- Civil Law (e.g., contracts, torts, property law)
+- Constitutional Law
+- Legal Rights (e.g., right to privacy, right to an attorney)
+- Court Procedures
+- Legal Defenses
+- International Law
+
+### Example of How You Should Respond:
+- "Under the **Indian Penal Code (IPC) Section 420**, fraud is defined as..."
+- "The **Miranda Rights** in the US ensure that..."
+- "In **contract law**, consideration is required to form a binding agreement."
+
+If the user asks a non-legal question, respond with:
+"I'm here to discuss legal topics. Please ask a question related to laws or legal rights."
+
+Stick strictly to legal content.
+`;
+const formatLegalResponse = (text) => {
+    return text
+      .replace(/\*/g, " ") // Removes asterisks 
+      .replace(/_/g, " ") // Removes underscores
+      .replace(/#+/g, " ") // Removes hashtags 
+      .replace(/\n{2,}/g, "\n\n")
+      .trim();
+  };
 export default async function chatResponse  (req, res)  {
     try {
         const { message } = req.body;
@@ -29,10 +59,11 @@ export default async function chatResponse  (req, res)  {
           return res.status(400).json({ error: "Message is required." });
         }
     
-        const result = await model.generateContent([message]);
+        const result = await model.generateContent([`${legalSystemPrompt}\n User: ${message}`]);
 
+        
         console.log(result.response.text());
-        const reply = result.response.text();
+        const reply = formatLegalResponse(result.response.text());
     
         return res.json({ reply });
     

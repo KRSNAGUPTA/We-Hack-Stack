@@ -31,11 +31,11 @@ const Chatbot = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <div className="w-full max-w-lg bg-white shadow-lg rounded-lg p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50p-4">
+      <div className="w-full max-w-6xl  shadow-lg rounded-lg p-4 bg-gray-500">
         <h1 className="text-2xl font-bold text-center mb-4">Legal Chatbot</h1>
         
-        <div className="h-80 overflow-y-auto border p-3 rounded-md bg-gray-50">
+        <div className="h-[700px] overflow-y-auto border p-3 rounded-md bg-gray-50">
           {messages.map((msg, index) => (
             <div key={index} className={`p-2 my-1 rounded-md ${msg.sender === "user" ? "bg-blue-200 text-right" : "bg-gray-300 text-left"}`}>
               <strong>{msg.sender === "user" ? "You" : "Bot"}:</strong> {msg.text}

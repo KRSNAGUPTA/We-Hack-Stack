@@ -5,7 +5,7 @@ import { connectDB } from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import caseRoutes from "./routes/caseRoutes.js";
 import { errorHandler } from "./middlewares/errorMiddleware.js";
-
+import chatbotRoutes from './routes/chatbotRoute.js';
 dotenv.config();
 connectDB();
 
@@ -24,7 +24,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/cases", caseRoutes);
-
+app.use('/api/v1', chatbotRoutes);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;

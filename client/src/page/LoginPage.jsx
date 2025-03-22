@@ -45,17 +45,12 @@ const LoginPage = () => {
       let response;
       
       if (isLogin) {
-        // Handle login
-        response = await axios.post('http://localhost:3000/api/v1/users/login', 
-          { email, password },
-          { withCredentials: true }
-        );
+        response = await api.post("/users/login", { email, password }, { withCredentials: true });
         
         if (response.data.success) {
           setAlertMessage("Successfully logged in!");
           setShowAlert(true);
           
-          // Store auth status and tokens
           localStorage.setItem('isLoggedIn', 'true');
           localStorage.setItem('accessToken', response.data.accessToken);
           

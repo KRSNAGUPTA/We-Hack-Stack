@@ -17,6 +17,7 @@ import {
   Users,
   Lock,
 } from "lucide-react"
+import Header from "@/components/Header"
 // #F8FAFC
 // #D9EAFD
 // #BCCCDC
@@ -24,8 +25,10 @@ import {
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen p-1">
-      {/* Navigation */}
-      <header className="border-b ">
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+        <Header />
+      </div>
+      {/* <header className="border-b ">
         <div className="container flex items-center justify-between py-4 bg-slate-300 rounded-xl p-4">
           <div className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-blue-600" />
@@ -55,7 +58,7 @@ export default function LandingPage() {
             <Button size="sm">Sign up</Button>
           </div>
         </div>
-      </header>
+      </header> */}
 
       <main className="flex-1 p-1 ">
         {/* Hero Section */}

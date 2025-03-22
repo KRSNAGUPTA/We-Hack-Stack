@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 import { AuthProvider } from './utils/AuthContext';
 import NotFound from "./page/NotFound";
+import LegalQuiz from "./page/QuizPage";
 const Home = lazy(() => import("./page/Home.jsx"));
 const RegistrationPage = lazy(() => import("./page/RegistrationPage.jsx"));
 const LoginPage = lazy(()=>import("./page/LoginPage.jsx"))
@@ -21,6 +22,7 @@ function App() {
             <Route path="/chat" element={<Chatbot/>} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<RegistrationPage />} />
+            <Route path="/daily-quiz" element={<LegalQuiz />} />
             <Route path="/*" element={<NotFound />} />
           </Routes>
         </Suspense>

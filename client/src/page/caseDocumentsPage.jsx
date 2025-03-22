@@ -143,7 +143,7 @@ export default function CaseDocumentsPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentItems.map((doc) => (
-              <Card key={doc.CaseId} className="flex flex-col justify-between border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/60 backdrop-blur-md">
+              <Card key={doc._id} className="flex flex-col justify-between border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/60 backdrop-blur-md">
                 <CardHeader className="pb-2">
                   <h2 className="text-xl font-semibold text-violet-900">{doc.CaseTitle}</h2>
                 </CardHeader>
@@ -163,7 +163,7 @@ export default function CaseDocumentsPage() {
                 <CardFooter className="bg-white/40 backdrop-blur-sm p-4 mt-2">
                   <Button 
                     className="w-full bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white shadow-md hover:shadow-lg transition-all"
-                    onClick={() => navigate(`/case/${doc.CaseId}`)}
+                    onClick={() => navigate(`/case/${doc._id}`)}
                   >
                     <FileText className="mr-2" size={20} />
                     View Case

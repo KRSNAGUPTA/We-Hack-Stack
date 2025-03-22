@@ -14,6 +14,7 @@ import { Mail, Eye, EyeOff } from "lucide-react";
 import { FaGithub } from 'react-icons/fa';
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
+import api from "@/utils/api";
 
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);

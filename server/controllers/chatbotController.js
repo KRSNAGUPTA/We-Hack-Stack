@@ -4,42 +4,40 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 
-import  {
-    GoogleGenerativeAI,
-    HarmCategory,
-    HarmBlockThreshold,
-  } from "@google/generative-ai";
+import  {GoogleGenerativeAI} from "@google/generative-ai";
   
   const apiKey = process.env.GEMINI_API_KEY;
   const genAI = new GoogleGenerativeAI(apiKey);
   
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash-thinking-exp-01-21",
+    model: "gemini-2.0-flash",
   });
   
   const generationConfig = {
     temperature: 0.7,
     topP: 0.95,
     topK: 64,
-    maxOutputTokens: 65536,
+    maxOutputTokens: 8192,
     responseMimeType: "text/plain",
   };
   
 export default async function chatResponse  (req, res)  {
-  try {
-    const { message, history } = req.body;
+    try {
+        const { message } = req.body;
+    
+        if (!message) {
+          return res.status(400).json({ error: "Message is required." });
+        }
+    
+        const result = await model.generateContent([message]);
 
-    const chatSession = model.startChat({
-      generationConfig,
-      history: history || [],
-    });
-
-    const result = await chatSession.sendMessage(message);
-    const responseText = await result.response.text();
-
-    res.json({ response: responseText });
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-    res.status(500).json({ error: "Failed to fetch response" });
-  }
+        console.log(result.response.text());
+        const reply = result.response.text();
+    
+        return res.json({ reply });
+    
+      } catch (error) {
+        console.error("Gemini API Error:", error);
+        return res.status(500).json({ error: "Failed to generate response" });
+      }
 };

@@ -1,42 +1,64 @@
-import { useState } from 'react';
-import { getChatResponse } from './../utils/chatbotApi';
+import { useState } from "react";
+import axios from "axios";
 
 const Chatbot = () => {
-  const [message, setMessage] = useState('');
-  const [chatHistory, setChatHistory] = useState([]);
+  const [messages, setMessages] = useState([]); // Stores chat history
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSendMessage = async () => {
-    if (!message.trim()) return;
+  const handleSend = async () => {
+    if (!input.trim()) return;
 
-    const userMessage = { role: 'user', content: message };
-    setChatHistory([...chatHistory, userMessage]);
+    const userMessage = { sender: "user", text: input };
+    setMessages((prev) => [...prev, userMessage]);
 
-    setMessage('');
+    setLoading(true);
+    try {
+      const res = await axios.post("http://localhost:3000/api/v1/chat", {
+        message: input,
+      });
 
-    const botReply = await getChatResponse(message);
-    setChatHistory([...chatHistory, userMessage, { role: 'bot', content: botReply }]);
+      const botReply = { sender: "bot", text: res.data.reply };
+      setMessages((prev) => [...prev, botReply]);
+    } catch (error) {
+      console.error("Error fetching response:", error);
+      const errorMessage = { sender: "bot", text: "Something went wrong. Please try again!" };
+      setMessages((prev) => [...prev, errorMessage]);
+    }
+
+    setInput("");
+    setLoading(false);
   };
 
   return (
-    <div className="max-w-xl mx-auto p-4 bg-gray-300 shadow-md rounded-lg h-full">
-      <div className="h-72 overflow-y-auto bg-blue-200 p-4 rounded-md">
-        {chatHistory.map((chat, index) => (
-          <div key={index} className={`my-2 p-2 ${chat.role === 'user' ? 'bg-gray-400 text-black-800 text-right' : 'bg-gray-300 text-gray-800 text-left'} rounded-md`}>
-            {chat.content}
-          </div>
-        ))}
-      </div>
-      <div className="mt-4 flex">
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Ask something..."
-          className="flex-grow p-2 border rounded-l-md"
-        />
-        <button onClick={handleSendMessage} className="bg-blue-500 text-white px-4 py-2 rounded-r-md">
-          Send
-        </button>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+      <div className="w-full max-w-lg bg-white shadow-lg rounded-lg p-4">
+        <h1 className="text-2xl font-bold text-center mb-4">Legal Chatbot</h1>
+        
+        <div className="h-80 overflow-y-auto border p-3 rounded-md bg-gray-50">
+          {messages.map((msg, index) => (
+            <div key={index} className={`p-2 my-1 rounded-md ${msg.sender === "user" ? "bg-blue-200 text-right" : "bg-gray-300 text-left"}`}>
+              <strong>{msg.sender === "user" ? "You" : "Bot"}:</strong> {msg.text}
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 flex">
+          <input
+            type="text"
+            className="flex-1 p-2 border rounded-md"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your message..."
+          />
+          <button
+            className="ml-2 bg-blue-500 text-white px-4 py-2 rounded-md disabled:opacity-50"
+            onClick={handleSend}
+            disabled={loading}
+          >
+            {loading ? "..." : "Send"}
+          </button>
+        </div>
       </div>
     </div>
   );

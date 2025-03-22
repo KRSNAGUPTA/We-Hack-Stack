@@ -13,12 +13,8 @@ function Header() {
           <Home className="text-indigo-700"/>
         </DockIcon>
         <Separator orientation="vertical" />
-        <DockIcon onClick={() => navigate("/search")}>
-          <Search />
-        </DockIcon>
-        <Separator orientation="vertical" />
         <DockIcon onClick={() => navigate("/case")}>
-          <File />
+          <Search />
         </DockIcon>
         <Separator orientation="vertical" />
         <DockIcon onClick={() => navigate("/bot")}>

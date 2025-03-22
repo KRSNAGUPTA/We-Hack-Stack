@@ -8,7 +8,8 @@ import {
   updatePassword,
   updateUserFiles,
   updateUserTextDetails,
-  refreshAccessToken,  // Add this function
+  refreshAccessToken,
+  googleLogin,  // Add this function
 } from "../controllers/userController.js";
 import { upload } from "../middlewares/multerMiddleware.js";
 import { jwtVerification } from "../middlewares/authMiddleware.js";
@@ -33,6 +34,7 @@ router.post(
 
 router.route("/login").post(loginUser);
 router.route("/social/login").post(socialLogin);
+router.route("/google/callback").post(googleLogin);;
 // protected routes
 router.route("/logout").post(jwtVerification, logoutUser);
 router.route("/update-password").post(jwtVerification, updatePassword);

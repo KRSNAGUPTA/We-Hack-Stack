@@ -314,6 +314,9 @@ export const refreshAccessToken = async (req, res) => {
     });
   }
 };
+export const googleLogin = asyncHandler(async (req, res) => {
+  console.log("Google login request received:", req.body);
+})
 
 export const socialLogin = asyncHandler(async (req, res) => {
   try {

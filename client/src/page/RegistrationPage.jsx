@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/Button";
-import { Input } from "../components/Input";
+import  Button  from "../components/Button";
+import Input  from "../components/Input";
 import { Label } from "../components/ui/label";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Github, Mail, Eye, EyeOff } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 
 const RegistrationPage = () => {
+    console.log("RegistrationPage");
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',

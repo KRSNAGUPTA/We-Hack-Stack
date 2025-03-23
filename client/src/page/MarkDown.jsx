@@ -104,7 +104,7 @@ const CaseViewer = () => {
       )}
 
       <div className="max-w-6xl mx-auto mb-6">
-        <Link to="/cases">
+        <Link to="/case">
           <Button
             variant="ghost"
             className="gap-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 transition-all"

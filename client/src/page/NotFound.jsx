@@ -61,7 +61,7 @@ export default function NotFoundPage() {
                 </Button>
 
                 <Button
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate("/case")}
                   className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white shadow-md hover:shadow-lg transition-all rounded-full"
                 >
                   <FileSearch className="mr-2" size={18} />

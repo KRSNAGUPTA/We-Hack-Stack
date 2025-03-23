@@ -17,7 +17,7 @@ function Header() {
           <Search />
         </DockIcon>
         <Separator orientation="vertical" />
-        <DockIcon onClick={() => navigate("/quiz")}>
+        <DockIcon onClick={() => navigate("/daily-quiz")}>
           <QuizIcon />
         </DockIcon>
         <Separator orientation="vertical" />

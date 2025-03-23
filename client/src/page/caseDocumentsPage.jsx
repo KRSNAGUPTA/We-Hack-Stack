@@ -6,8 +6,19 @@ import ReactMarkdown from "react-markdown";
 // Import shadcn components
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header.jsx";
@@ -75,7 +86,10 @@ export default function CaseDocumentsPage() {
           <Skeleton className="h-12 w-64 mb-8" />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, index) => (
-              <Card key={index} className="overflow-hidden border-0 shadow-lg bg-white/60 backdrop-blur-md">
+              <Card
+                key={index}
+                className="overflow-hidden border-0 shadow-lg bg-white/60 backdrop-blur-md"
+              >
                 <CardHeader>
                   <Skeleton className="h-6 w-3/4" />
                 </CardHeader>
@@ -102,11 +116,27 @@ export default function CaseDocumentsPage() {
           {error}
         </div>
       )}
-      <header className="bg-gradient-to-r from-purple-700 to-violet-800 shadow-md">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-white">Case Documents</h1>
+      <header className="bg-gradient-to-r from-blue-700 to-violet-900 shadow-lg">
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-2">
+            <h3
+              onClick={() => navigate("/")}
+              className="hover:cursor-pointer font-extrabold text-white text-3xl tracking-tight flex items-center gap-1"
+            >
+              Legal <span className="text-blue-400">Lens</span>
+              <span role="img" aria-label="magnifier">
+                🔍
+              </span>
+            </h3>
+          </div>
+          <div>
+            <h2 className="text-lg sm:text-xl text-white font-medium tracking-wide">
+              Case Documents
+            </h2>
+          </div>
         </div>
       </header>
+
       <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-10">
         <Header />
       </div>
@@ -115,7 +145,10 @@ export default function CaseDocumentsPage() {
           <div className="flex flex-col sm:flex-row justify-between items-center mb-8 space-y-4 sm:space-y-0">
             <div className="relative w-full sm:w-64">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-violet-400" size={20} />
+                <Search
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-violet-400"
+                  size={20}
+                />
                 <Input
                   type="text"
                   placeholder="Search cases..."
@@ -135,7 +168,10 @@ export default function CaseDocumentsPage() {
                   <SelectItem value="CaseTitle">Sort by Case Title</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" className="bg-white/70 backdrop-blur-sm border-violet-200">
+              <Button
+                variant="outline"
+                className="bg-white/70 backdrop-blur-sm border-violet-200"
+              >
                 <Filter size={18} className="mr-2 text-violet-600" />
                 <span className="text-violet-800">Filter</span>
               </Button>
@@ -143,26 +179,33 @@ export default function CaseDocumentsPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentItems.map((doc) => (
-              <Card key={doc._id} className="flex flex-col justify-between border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/60 backdrop-blur-md">
+              <Card
+                key={doc._id}
+                className="flex flex-col justify-between border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/60 backdrop-blur-md"
+              >
                 <CardHeader className="pb-2">
-                  <h2 className="text-xl font-semibold text-violet-900">{doc.CaseTitle}</h2>
+                  <h2 className="text-xl font-semibold text-violet-900">
+                    {doc.CaseTitle}
+                  </h2>
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-gray-600 line-clamp-3 overflow-hidden max-h-[4.5rem]">
                     <ReactMarkdown>{doc.CaseSummary}</ReactMarkdown>
                   </div>
                   <div className="mt-4 flex justify-between items-center">
-                    <span className="text-sm text-violet-600 font-medium">{doc.date}</span>
-                    {doc.category && 
+                    <span className="text-sm text-violet-600 font-medium">
+                      {doc.date}
+                    </span>
+                    {doc.category && (
                       <Badge className="bg-gradient-to-r from-amber-400 to-amber-500 text-white border-0 shadow-sm">
                         {doc.category}
                       </Badge>
-                    }
+                    )}
                   </div>
                 </CardContent>
                 <CardFooter className="bg-white/40 backdrop-blur-sm p-4 mt-2">
-                  <Button 
-                    className="w-full bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white shadow-md hover:shadow-lg transition-all"
+                  <Button
+                    className="rounded-full w-full bg-blue-700 hover:bg-blue-800 active:scale-75 transition-all ease-in-out duration-500 text-white shadow-md hover:shadow-lg "
                     onClick={() => navigate(`/case/${doc._id}`)}
                   >
                     <FileText className="mr-2" size={20} />
@@ -172,15 +215,20 @@ export default function CaseDocumentsPage() {
               </Card>
             ))}
           </div>
-          
+
           {sortedDocuments.length === 0 && (
             <div className="flex flex-col items-center justify-center p-10 mt-8 bg-white/60 backdrop-blur-md rounded-lg shadow-md">
               <FileText size={48} className="text-violet-300 mb-4" />
-              <h3 className="text-lg font-medium text-violet-900 mb-2">No cases found</h3>
-              <p className="text-violet-600 text-center">Try adjusting your search or filters to find what you're looking for.</p>
+              <h3 className="text-lg font-medium text-violet-900 mb-2">
+                No cases found
+              </h3>
+              <p className="text-violet-600 text-center">
+                Try adjusting your search or filters to find what you're looking
+                for.
+              </p>
             </div>
           )}
-          
+
           {sortedDocuments.length > 0 && (
             <div className="mt-8 flex justify-between items-center bg-white/60 backdrop-blur-sm p-4 rounded-full shadow-md">
               <Button

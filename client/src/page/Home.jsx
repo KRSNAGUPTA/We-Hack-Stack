@@ -40,7 +40,7 @@ export default function LandingPage() {
       </div>
 
       <main className="flex-1 space-y-6">
-        <section className="bg-gradient-to-r from-blue-50 to-indigo-50 w-full p-4">
+        <section className=" bg-gray-100 w-full p-4 flex flex-col justify-center h-screen">
           <div className="container mx-auto px-4">
             <div className="flex flex-col lg:flex-row items-center gap-8">
               <div className="w-full lg:w-1/2">
@@ -96,7 +96,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="features" className="py-12 md:py-20 px-4">
+        <section id="features" className="py-12 md:py-20 px-4 h-screen">
           <div className="container mx-auto">
             <div className="text-center mb-10 md:mb-16">
               <Badge className="mb-4 px-3 py-1 bg-blue-100 text-blue-800 hover:bg-blue-100">
@@ -253,7 +253,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="chatbot" className="py-20 bg-gray-100 rounded-xl p-2">
+        <section id="chatbot" className="py-20 bg-gray-100 rounded-xl p-2 h-screen flex flex-col justify-center">
           <div className="flex justify-center items-center flex-col px-20">
             <div className="flex flex-col md:flex-row items-center gap-12">
               <div className="flex-1 space-y-6">
@@ -363,7 +363,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="modules" className="py-20 rounded-xl">
+        <section id="modules" className="py-20 rounded-xl h-screen flex flex-col justify-center">
           <div className="flex justify-center items-center flex-col p-4 rounded-xl">
             <div className="text-center mb-16">
               <Badge className="mb-4 px-3 py-1 bg-blue-100 text-blue-800 hover:bg-blue-100">
@@ -623,7 +623,7 @@ export default function LandingPage() {
 
         <section
           id="gamification"
-          className="py-24 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-3xl p-6 shadow-xl"
+          className=" py-24 bg-gray-100 rounded-3xl p-6 shadow-xl"
         >
           <div className="flex justify-center flex-col">
             <div className="text-center mb-20">

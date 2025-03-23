@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 import { AuthProvider } from './utils/AuthContext';
 import NotFound from "./page/NotFound";
-import LegalQuiz from "./page/QuizPage";
+import LegalQuiz from "./page/DailyQuizPage";
 import QuizPage from "./page/Quiz";
 const Home = lazy(() => import("./page/Home.jsx"));
 const RegistrationPage = lazy(() => import("./page/RegistrationPage.jsx"));

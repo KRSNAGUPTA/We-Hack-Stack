@@ -97,11 +97,6 @@ Visit `http://localhost:5173` in your browser.
 ![Case study](https://github.com/user-attachments/assets/6b29fba1-8afa-4db7-9e7c-3ffa4246c21e)
 
 
-
-
-![Daily Quiz](public/screenshot3.png)
-*Gamified learning through daily legal quizzes*
-
 ---
 
 ## Hackathon Information 🏆
